@@ -943,7 +943,7 @@ su -wuhm -c "/bin/sh /project /project/idc1/c/start.sh"
 
 #### 线程池实现
 
-![线程池实现](pic/线程池实现.png)
+![线程池实现](images/线程池实现.png)
 
 在队列中，存放的是客户端的socket
 
