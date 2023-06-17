@@ -70,7 +70,7 @@ CentOS7.x	MySQL5.7	字符集utf-8
 
  
 
-![image-20230511213954576](images/image-20230511213954576.png)
+![image-20230511213954576 (1)](images/image-20230511213954576%20(1).png)
 
 
 
@@ -154,27 +154,27 @@ union semun sem_union;		sem_union.val = value;   // 设置信号量的初始**se
 
 2. 输入参数写成xml格式方便应对众多输入参数。利用**GetXMLBuffer**函数读取输入参数
 
-2. 创建心跳信息：**CPActive**类中的**AddPInfo**(starg.timeout, starg.pname)函数
+3. 创建心跳信息：**CPActive**类中的**AddPInfo**(starg.timeout, starg.pname)函数
 
-3. 登录ftp服务器：**ftp.login**(starg.host, starg.username, starg.password, starg.mode)
+4. 登录ftp服务器：**ftp.login**(starg.host, starg.username, starg.password, starg.mode)
 
-4. 进入ftp服务器存放文件的目录**ftp.chdir**(starg.remotepath)，（调用FtpChdir）
+5. 进入ftp服务器存放文件的目录**ftp.chdir**(starg.remotepath)，（调用FtpChdir）
 
-5. 调用**ftp.nlist()**方法列出服务器目录中的文件，结果存放到本地文件listfilename中：
+6. 调用**ftp.nlist()**方法列出服务器目录中的文件，结果存放到本地文件listfilename中：
 
    ftp.nlist(".", starg.listfilename)，其中有MKDIR()和FtpNlst(listfilename,remotedir,m_ftpconn)
 
-6. LoadListFile加载文件函数，将上述ftp.nlist()方法获取到的list文件加载到容器vlistfile2中（1）打开本地文件File.Open（listfilename）（2）读取本地文件中的一行到File.Fgets（3）MatchStr匹配满足条件的文件（4）当ptype为1，checktime为true时，调用ftp.mtime（底层调用FtpModDate函数）获取ftp服务器文件时间放入ftp.m_mtime中
+7. LoadListFile加载文件函数，将上述ftp.nlist()方法获取到的list文件加载到容器vlistfile2中（1）打开本地文件File.Open（listfilename）（2）读取本地文件中的一行到File.Fgets（3）MatchStr匹配满足条件的文件（4）当ptype为1，checktime为true时，调用ftp.mtime（底层调用FtpModDate函数）获取ftp服务器文件时间放入ftp.m_mtime中
 
-7. 如果ptype==1（1）加载okfilename文件中的内容到容器vlistfile1中（2）比较vlistfile2和vlistfile1，得到vlistfile3和vlistfile4（3）把vlistfile4中的内容复制到vlistfile2中：vlistfile2.clear(); vlistfile2.swap(vlistfile4);
+8. 如果ptype==1（1）加载okfilename文件中的内容到容器vlistfile1中（2）比较vlistfile2和vlistfile1，得到vlistfile3和vlistfile4（3）把vlistfile4中的内容复制到vlistfile2中：vlistfile2.clear(); vlistfile2.swap(vlistfile4);
 
-8. 遍历容器vlistfile2，调用**ftp.get()**方法从服务器下载文件：ftp.get(strremotefilename, strlocalfilename)
+9. 遍历容器vlistfile2，调用**ftp.get()**方法从服务器下载文件：ftp.get(strremotefilename, strlocalfilename)
 
-9. 如果ptype==1，把下载成功的文件记录追加到okfilename文件中
+10. 如果ptype==1，把下载成功的文件记录追加到okfilename文件中
 
-10. 如果ptype==2，使用ftp.ftpdelete()删除服务器文件
+11. 如果ptype==2，使用ftp.ftpdelete()删除服务器文件
 
-11. 如果ptype==3，使用ftp.ftprename()服务器文件转存到服务器备份目录
+12. 如果ptype==3，使用ftp.ftprename()服务器文件转存到服务器备份目录
 
 
 
@@ -785,7 +785,210 @@ su -wuhm -c "/bin/sh /project /project/idc1/c/start.sh"
 
 4. 删除文件调用**REMOVE**(Dir.m_FullFileName)
 
-   
+> 代码解释
+
+* public:存放框架
+* pthread1:演示线程使用 [makefile](pthread1/makefile)
+* idc1:生成数据 [makefile](idc1/c/makefile)
+  * [start.sh](idc1/c/start.sh) 启动脚本
+  * [killall.sh](idc1/c/start.sh) 删除服务脚本
+  * [crtsurfdata5.cpp](idc1/c/crtsurfdata5.cpp) 用于生成全国气象站点观察的分钟数据
+  * [obtcodetodb.cpp](idc1/c/obtcodetodb.cpp) 本程序用于把全国站点参数数据保存到数据库T_ZHOBTCODE表中
+  * [obtmindtodb.cpp](idc1/c/obtmindtodb.cpp) 本程序用于把全国站点分钟观测数据入库到T_ZHOBTMIND表中，支持xml和csv两种文件格式
+* tools1:工具程序 [makefile](tools1/c/makefile)
+  * [checproc.cpp](tools1/c/checkproc.cpp) 守护进程
+  * [deletefiles.cpp](tools1/c/deletefiles.cpp) 用于删除历史的数据文件或日志文件
+  * [gzipfiles.cpp](tools1/c/gzipfiles.cpp) 用于压缩历史的数据文件或日志文件
+  * [procctl.cpp](tools1/c/procctl.cpp) 服务程序的调度程序，周期性启动服务程序或shell脚本
+  * ftp模块
+    * [ftpgetfiles.cpp](tools1/c/ftpgetfiles.cpp) 调用ftp获取服务器文件
+    * [ftpputfiles.cpp](tools1/c/ftpputfiles.cpp) ftp上传文件
+    * ftp客户端基于github上 https://github.com/codebrainz/ftplib 
+  * tcp模块
+    * [tcpputfiles.cpp](tools1/c/tcpputfiles.cpp) 采用tcp协议，实现文件上传的客户端
+    * [tcpgetfiles.cpp](tools1/c/tcpgetfiles.cpp) 采用tcp协议，实现文件下载的客户端
+    * [fileserver.cpp](tools1/c/fileserver.cpp) 文件传输的服务
+      * 采用异步通信机制
+      * 解决粘包和分包，采用自定义报文格式，用整形变量存放报文长度。
+  * mysql模块
+    * [diminingmysql.cpp](tools1/c/dminingmysql.cpp) 本程序是数据中心的公共功能模块，用于从mysql数据库源表抽取数据，生成xml文件
+    * [xmltodb.cpp](tools1/c/xmltodb.cpp) 本程序是数据中心的公共功能模块，用于把xml文件入库到MySQL的表中
+    * [migratetable.cpp](tools1/c/migratetable.cpp) 本程序是数据中心的公共功能模块，用于迁移表中的数据
+    * [deletetable.cpp](tools1/c/deletetable.cpp) 本程序是数据中心的公共功能模块，用于定时清理表中的数据
+    * [syncupdate.cpp](tools1/c/syncupdate.cpp) 本程序是数据中心的公共功能模块，采用刷新的方法同步MySQL数据库之间的表
+    * [syncincrement.cpp](tools1/c/syncincrement.cpp) 本程序是数据中心的公共功能模块，采用增量的方法同步MySQL数据库之间的表
+    * [syncincrementex.cpp](tools1/c/syncincrementex.cpp) 本程序是数据中心的公共功能模块，采用增量的方法同步MySQL数据库之间的表
+      * 本程序不使用Federated引擎
+  * oracle模块
+    * [dminingoracle.cpp](tools1/c/dminingoracle.cpp) 本程序是数据中心的公共功能模块，用于从Oracle数据库源表抽取数据，生成xml文件
+    * [xmltodb_oracle.cpp](tools1/c/xmltodb_oracle.cpp) 本程序是数据中心的公共功能模块，用于把xml文件入库到Oracle的表中
+    * [migratetable_oracle.cpp](tools1/c/migratetable_oracle.cpp) 本程序是数据中心的公共功能模块，用于迁移表中的数据
+    * [deletetable_oracle.cpp](tools1/c/deletetable_oracle.cpp) 本程序是数据中心的公共功能模块，用于定时清理表中的数据
+    * [syncupdate_oracle.cpp](tools1/c/syncupdate_oracle.cpp) 本程序是数据中心的公共功能模块，采用刷新的方法同步Oracle数据库之间的表
+    * [syncincrement_oracle.cpp](tools1/c/syncincrement_oracle.cpp) 本程序是数据中心的公共功能模块，采用增量的方法同步Oracle数据库之间的表
+    * [syncincrementex_oracle.cpp](tools1/c/syncincrementex_oracle.cpp) 本程序是数据中心的公共功能模块，采用增量的方法同步Oracle数据库之间的表。
+      *  注意，本程序不使用dblink。
+  * 数据服务总线
+    * [webserver.cpp](tools1/c/webserver.cpp) 此程序是数据服务总线的服务端程序
+      * 实践了线程池和数据库连接池
+  * 代理模块
+    * [inetd.cpp](tools1/c/inetd.cpp) 网络代理服务程序
+      * 正向代理
+    * [rinetd.cpp](tools1/c/rinetd.cpp) 网络代理服务程序-外网端
+      * 反向代理外网端
+    * [rinetdin.cpp](tools1/c/rinetdin.cpp) 网络代理服务程序-内网端
+      * 反向代理内网端
+
+
+
+大致笔记
+===
+
+## 如何保证服务程序永不停机
+
+#### 进程对信号的处理方法有三种：
+
+1. 对该信号的处理采用系统的默认操作，大部分的信号的默认操作是终止进程。
+2. 设置中断的处理函数，收到信号后，由该函数来处理。
+3. 忽略某个信号，对该信号不做任何处理，就像未发生过一样。
+
+#### 信号有什么用
+
+服务程序运行在后台，如果想让中止它，杀掉不是个好办法，因为程序被杀的时候，程序突然死亡，没有安排善后工作。  
+如果向服务程序发送一个信号，服务程序收到这个信号后，调用一个函数，在函数中编写善后的代码，程序就可以有计划的退出。   
+向服务程序发送0的信号，可以检测程序是否存活。  
+
+#### 信号量
+
+信号量（信号灯）本质上是一个计数器，用于协调多个进程（包括但不限于父子进程）对共享数据对象的读/写。它不以传送数据为目的，主要是用来保护共享资源（共享内存、消息队列、socket连接池、数据库连接池等），保证共享资源在一个时刻只有一个进程独享。   
+信号量是一个特殊的变量，只允许进程对它进行等待信号和发送信号操作。最简单的信号量是取值0和1的二元信号量，这是信号量最常见的形式。   
+
+
+#### Linux的0、1、2号进程
+
+![Linux的012号进程](images/Linux的012号进程.png)
+
+#### fork
+
+- 子进程是父进程的副本
+- 子进程获得了父进程的数据空间、堆和栈的副本、不是共享
+- 父进程中打开的文件描述副也被复制到子进程中
+- 如果父进程先退出，子进程会成为孤儿进程，由1号进程接管
+- 如果子进程先退出，内核向父进程发送SIGCHLD信号，如果父进程不处理这个信号 ，子进程会成为僵尸进程
+
+#### 僵尸进程的危害:
+
+如果子进程在父进程之前中止，内核为每个子进程保留了一个数据 结构，包括进程 编号，终止状态和使用cpu时间等，父进程如果处理了子进程退出的信息，内核就会释放这个数据结构，如果父进程没有处理子进程退出的信息，内核就不会释放这个数据结构，子进程编号就会一直被占用，但是系统可用的进程号是有限的，如果大量的产生僵尸进程，将因为没有可用的进程号而导致系统不能产生新的进程，这就是僵尸进程的危害
+
+#### 避免僵尸进程:
+
+为了避免成为僵尸，可以让父进程忽略SIGCHLD这个信号，或者用wait捕获到这个信号，但这样会让父进程阻塞，第三种方法是设置SIGCHLD信号处理函数，这样父进程可以避免阻塞       
+
+### 进程的心跳机制
+
+![进程的心跳机制](images/进程的心跳机制.png)
+
+#### 守护进程如何判断服务程序已经死机？
+
+- 心跳机制。
+- 创建共享内存，存放服务程序的心跳信息。
+- 守护进程，每隔若干秒遍历一次共享内存。终止掉超时进程。
+
+#### 守护进程实现
+
+![守护进程实现](images/守护进程实现.png)
+
+#### 共享内存
+
+共享内存（Shared Memory）就是允许多个进程访问同一个内存空间，是在多个进程之间共享和传递数据最高效的方式。操作系统将不同进程之间共享内存安排为同一段物理内存，进程可以将共享内存连接到它们自己的地址空间中，如果某个进程修改了共享内存中的数据，其它的进程读到的数据也将会改变。  
+共享内存并未提供锁机制，也就是说，在某一个进程对共享内存的进行读写的时候，不会阻止其它的进程对它的读写。如果要对共享内存的读/写加锁，可以使用信号量。
+
+## 开发基于tcp协议的文件传输子系统
+
+![多进程网络服务程序框架](images/多进程网络服务程序框架.png)
+
+#### 多进程网络服务端程序退出的三种情况：
+
+* 1）如果是子进程收到退出信号，该子进程断开与客户端连接的socket，然后退出。
+* 2）如果是父进程收到退出信号，父进程先关闭监听的socket，然后向全部的子进程发出退出信号。
+* 3）如果父子进程都收到退出信号，本质上与第2种情况相同。
+
+![心跳报文](images/心跳报文.png)
+
+![同步通讯](images/同步通讯.png)
+
+![异步通讯](images/异步通讯.png)
+
+![异步通信实现三种方法](images/异步通信实现三种方法.png)
+
+## 开发数据服务总线
+
+#### 数据库连接池
+
+![数据库连接池](pic/数据库连接池.png)
+
+- 预先创建10个 Oracle 数据库连接
+- 使用互斥锁
+- CPU 2核4G, 性能在200次/秒
+
+数据库连接池的优化
+
+- 设定数据库连接池的最大连接数（仍然为10）
+- 连接数不够时，自动扩展，建立新的连接
+- 连接空闲时(n秒未使用)，自动断开，释放资源
+  - 在服务程序中，用一个专用的子线程调用此函数：检查数据库连接池，断开空闲连接
+  - 判断连接是否超时（超时时间本项目中设置为50s）
+    - 如果超时，断开数据库连接，重置连接使用时间
+    - 如果没有超时，执行一次SQL，验证连接是否有效
+
+#### 线程池实现
+
+![线程池实现](pic/线程池实现.png)
+
+在队列中，存放的是客户端的socket
+
+采用条件变量+互斥锁实现队列功能
+
+- CPU 2核4G, 性能在1000次/秒（使用数据库，数据库连接池+线程池）
+- CPU 2核4G, 性能在6000次/秒（不使用数据库）
+
+> 线程数比CPU核数略多会比较好
+
+#### 线程池监控
+
+![线程池监控](images/线程池监控.png)
+
+> 线程之间的地址是共享的  
+
+工作线程定时报告自己信息。
+
+## I/O复用技术
+
+#### epoll 水平触发
+
+![水平触发](images/水平触发.png)
+
+#### epoll 边缘触发
+
+![边缘触发1](images/边缘触发1.png)
+![边缘触发2](images/边缘触发2.png)
+
+#### 阻塞和非阻塞 IO 定义
+
+![阻塞和非阻塞IO](images/阻塞和非阻塞IO.png)
+
+#### I/O 复用需要非阻塞 IO
+
+![IO复用需要非阻塞IO](images/IO复用需要非阻塞IO1.png)
+![IO复用需要非阻塞IO](images/IO复用需要非阻塞IO2.png)
+
+#### 正向代理
+
+![正向代理](images/正向代理.png)
+
+#### 反向代理
+
+![反向代理](images/反向代理.png)
 
 ## 总结
 
@@ -794,3 +997,6 @@ Linux编程（多线程、进程通信、多线程、线程同步）
 数据库开发（高级）
 
 网络编程（中级）
+
+
+
